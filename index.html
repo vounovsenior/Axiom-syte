@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIOM — Анонимная биржа на TON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black: #0a0a0a;
+    --black-2: #111111;
+    --black-3: #161616;
+    --line: #262626;
+    --red: #e10600;
+    --red-bright: #ff1a1a;
+    --red-dim: #5c0b08;
+    --text: #ededed;
+    --text-dim: #8f8f8f;
+    --text-faint: #5a5a5a;
+    --font-head: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--black);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+  img,svg{ display:block; }
+
+  .wrap{ max-width:1140px; margin:0 auto; padding:0 24px; }
+  section{ position:relative; padding:120px 0; }
+  h1,h2,h3{ font-family:var(--font-head); font-weight:600; letter-spacing:-0.01em; }
+
+  ::selection{ background:var(--red); color:#fff; }
+
+  /* focus visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible{
+    outline:2px solid var(--red-bright);
+    outline-offset:3px;
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    background:rgba(10,10,10,0.75);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; max-width:1140px; margin:0 auto; }
+  .nav-logo{ font-family:var(--font-head); font-size:20px; font-weight:700; letter-spacing:0.02em; }
+  .nav-logo span{ color:var(--red); }
+  .nav-links{ display:flex; gap:32px; font-size:14px; color:var(--text-dim); }
+  .nav-links a{ transition:color .2s; }
+  .nav-links a:hover{ color:var(--text); }
+  .nav-cta{
+    font-size:14px; padding:9px 18px; border:1px solid var(--red);
+    border-radius:999px; color:var(--text); transition:all .25s;
+  }
+  .nav-cta:hover{ background:var(--red); box-shadow:0 0 24px rgba(225,6,0,.5); }
+  .nav-burger{ display:none; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding-top:80px; text-align:center; overflow:hidden;
+  }
+  .hero-bg{
+    position:absolute; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(225,6,0,0.16), transparent 60%),
+      linear-gradient(180deg, var(--black) 0%, var(--black-2) 100%);
+  }
+  .hero-grid{
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      linear-gradient(rgba(225,6,0,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(225,6,0,0.08) 1px, transparent 1px);
+    background-size:52px 52px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 10%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 10%, transparent 75%);
+    animation: gridDrift 26s linear infinite;
+  }
+  @keyframes gridDrift{
+    0%{ background-position:0 0, 0 0; }
+    100%{ background-position:52px 52px, -52px 52px; }
+  }
+  .hero-scan{
+    position:absolute; left:0; right:0; height:2px; z-index:1;
+    background:linear-gradient(90deg, transparent, var(--red-bright), transparent);
+    opacity:0.5; filter:blur(1px);
+    animation:scanMove 7s ease-in-out infinite;
+  }
+  @keyframes scanMove{
+    0%,100%{ top:15%; opacity:0.15; }
+    50%{ top:78%; opacity:.55; }
+  }
+  .hero-content{ position:relative; z-index:2; }
+  .hero-tag{
+    font-family:var(--font-mono); font-size:12px; color:var(--red-bright);
+    letter-spacing:0.08em; margin-bottom:24px; display:inline-block;
+    border:1px solid var(--red-dim); padding:6px 14px; border-radius:20px;
+    background:rgba(225,6,0,0.06);
+  }
+  .hero h1{
+    font-size:clamp(56px, 10vw, 128px); line-height:0.95;
+    background:linear-gradient(180deg, #fff 20%, #b3b3b3 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:20px;
+  }
+  .hero-sub{
+    font-size:clamp(17px, 2vw, 21px); color:var(--text-dim);
+    max-width:560px; margin:0 auto 44px; font-weight:400;
+  }
+  .hero-actions{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:15px;
+    padding:15px 32px; border-radius:999px; cursor:pointer; border:1px solid transparent;
+    transition:transform .2s, box-shadow .3s, background .3s, border-color .3s;
+    display:inline-block;
+  }
+  .btn-primary{ background:var(--red); color:#fff; }
+  .btn-primary:hover{ background:var(--red-bright); box-shadow:0 0 36px rgba(255,26,26,.55); transform:translateY(-2px); }
+  .btn-ghost{ border-color:var(--line); color:var(--text); background:transparent; }
+  .btn-ghost:hover{ border-color:var(--red); color:var(--red-bright); transform:translateY(-2px); }
+
+  .hero-stats{
+    position:relative; z-index:2; margin-top:88px;
+    display:flex; justify-content:center; gap:64px; flex-wrap:wrap;
+  }
+  .stat b{ display:block; font-family:var(--font-mono); font-size:28px; color:#fff; }
+  .stat span{ font-size:13px; color:var(--text-faint); }
+
+  /* ---------- reveal-on-scroll ---------- */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- section heads ---------- */
+  .section-head{ max-width:640px; margin-bottom:64px; }
+  .section-head h2{ font-size:clamp(30px, 4vw, 44px); margin-bottom:16px; }
+  .section-head p{ color:var(--text-dim); font-size:17px; }
+  .section-head.center{ margin-left:auto; margin-right:auto; text-align:center; }
+
+  /* ---------- ABOUT ---------- */
+  .about{ border-top:1px solid var(--line); }
+  .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+  .about-text p{ color:var(--text-dim); font-size:16px; margin-bottom:16px; }
+  .about-text strong{ color:var(--text); }
+  .about-panel{
+    background:var(--black-2); border:1px solid var(--line); border-radius:4px;
+    padding:32px; position:relative; overflow:hidden;
+  }
+  .about-panel::before{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(225,6,0,.10), transparent 60%);
+  }
+  .about-row{ display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); font-size:14px; position:relative; }
+  .about-row:last-child{ border-bottom:none; }
+  .about-row span:first-child{ color:var(--text-faint); }
+  .about-row span:last-child{ font-family:var(--font-mono); color:var(--red-bright); }
+
+  /* ---------- FEATURES ---------- */
+  .features-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .feature-card{
+    background:var(--black-2); padding:36px 30px; transition:background .3s;
+  }
+  .feature-card:hover{ background:var(--black-3); }
+  .feature-icon{
+    width:44px; height:44px; border:1px solid var(--red-dim); border-radius:4px;
+    display:flex; align-items:center; justify-content:center; margin-bottom:22px;
+    color:var(--red-bright);
+  }
+  .feature-card h3{ font-size:18px; margin-bottom:10px; }
+  .feature-card p{ color:var(--text-dim); font-size:14.5px; }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(4, 1fr); gap:32px; }
+  .step{ border-left:1px solid var(--line); padding-left:22px; position:relative; }
+  .step .step-num{ font-family:var(--font-mono); color:var(--red); font-size:13px; margin-bottom:14px; display:block; }
+  .step h3{ font-size:17px; margin-bottom:8px; }
+  .step p{ color:var(--text-dim); font-size:14px; }
+
+  /* ---------- ROADMAP ---------- */
+  .roadmap{ border-top:1px solid var(--line); }
+  .timeline{ position:relative; padding-left:32px; }
+  .timeline::before{ content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--line); }
+  .tl-item{ position:relative; padding-bottom:48px; }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-dot{ position:absolute; left:-32px; top:4px; width:11px; height:11px; border-radius:50%; background:var(--black); border:2px solid var(--red); }
+  .tl-item.done .tl-dot{ background:var(--red); box-shadow:0 0 10px rgba(255,26,26,.7); }
+  .tl-quarter{ font-family:var(--font-mono); font-size:13px; color:var(--red-bright); margin-bottom:6px; }
+  .tl-item h3{ font-size:19px; margin-bottom:6px; }
+  .tl-item p{ color:var(--text-dim); font-size:14.5px; max-width:520px; }
+
+  /* ---------- TOKENOMICS ---------- */
+  .token-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:64px; align-items:center; }
+  .token-bars{ display:flex; flex-direction:column; gap:16px; }
+  .token-bar-row{ display:flex; align-items:center; gap:14px; font-size:13.5px; }
+  .token-bar-label{ width:150px; color:var(--text-dim); flex-shrink:0; }
+  .token-bar-track{ flex:1; height:8px; background:var(--black-3); border-radius:4px; overflow:hidden; }
+  .token-bar-fill{ height:100%; background:linear-gradient(90deg, var(--red-dim), var(--red-bright)); width:0; transition:width 1.2s ease; border-radius:4px; }
+  .token-bar-pct{ font-family:var(--font-mono); width:38px; text-align:right; color:var(--text); }
+  .token-list li{ display:flex; gap:12px; margin-bottom:18px; font-size:14.5px; color:var(--text-dim); }
+  .token-list li::before{ content:"—"; color:var(--red); flex-shrink:0; }
+
+  /* ---------- FAQ ---------- */
+  .faq{ border-top:1px solid var(--line); }
+  .faq-list{ max-width:760px; }
+  .faq-item{ border-bottom:1px solid var(--line); }
+  .faq-q{
+    width:100%; background:none; border:none; color:var(--text); text-align:left;
+    font-family:var(--font-body); font-size:16.5px; font-weight:500; padding:22px 0;
+    cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:20px;
+  }
+  .faq-q:hover{ color:var(--red-bright); }
+  .faq-icon{ flex-shrink:0; font-family:var(--font-mono); font-size:18px; color:var(--red); transition:transform .3s; }
+  .faq-item.open .faq-icon{ transform:rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .35s ease; }
+  .faq-a-inner{ padding-bottom:22px; color:var(--text-dim); font-size:15px; max-width:640px; }
+
+  /* ---------- CTA / whitelist ---------- */
+  .cta{
+    border-top:1px solid var(--line);
+    background:radial-gradient(ellipse 70% 80% at 50% 100%, rgba(225,6,0,0.12), transparent 70%);
+    text-align:center;
+  }
+  .cta-tag{ font-family:var(--font-mono); font-size:12px; color:var(--red-bright); letter-spacing:.08em; margin-bottom:18px; }
+  .cta h2{ font-size:clamp(30px, 4.5vw, 48px); margin-bottom:36px; }
+
+  .countdown{ display:flex; justify-content:center; gap:20px; margin-bottom:48px; flex-wrap:wrap; }
+  .cd-box{ background:var(--black-2); border:1px solid var(--line); border-radius:4px; padding:18px 20px; min-width:88px; }
+  .cd-box b{ display:block; font-family:var(--font-mono); font-size:32px; color:#fff; }
+  .cd-box span{ font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; }
+
+  .whitelist-form{ display:flex; gap:12px; justify-content:center; max-width:520px; margin:0 auto; flex-wrap:wrap; }
+  .whitelist-form input{
+    flex:1; min-width:240px; background:var(--black-2); border:1px solid var(--line); color:var(--text);
+    padding:15px 18px; border-radius:8px; font-family:var(--font-mono); font-size:14px;
+  }
+  .whitelist-form input:focus{ border-color:var(--red); outline:none; }
+  .whitelist-form input::placeholder{ color:var(--text-faint); }
+  .whitelist-msg{ margin-top:18px; font-size:14px; color:var(--red-bright); min-height:20px; font-family:var(--font-mono); }
+
+  /* ---------- FOOTER ---------- */
+  footer{ border-top:1px solid var(--line); padding:56px 0 32px; }
+  .footer-top{ display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; margin-bottom:40px; }
+  .footer-logo{ font-family:var(--font-head); font-weight:700; font-size:20px; margin-bottom:10px; }
+  .footer-logo span{ color:var(--red); }
+  .footer-tagline{ color:var(--text-faint); font-size:13.5px; max-width:280px; }
+  .footer-social{ display:flex; gap:14px; }
+  .footer-social a{
+    width:38px; height:38px; border:1px solid var(--line); border-radius:4px;
+    display:flex; align-items:center; justify-content:center; color:var(--text-dim);
+    transition:all .25s;
+  }
+  .footer-social a:hover{ border-color:var(--red); color:var(--red-bright); }
+  .disclaimer{ font-size:12.5px; color:var(--text-faint); line-height:1.7; border-top:1px solid var(--line); padding-top:28px; margin-bottom:20px; }
+  .copyright{ font-size:12.5px; color:var(--text-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  .copyright a{ color:var(--text-faint); }
+  .copyright a:hover{ color:var(--red-bright); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    section{ padding:80px 0; }
+    .nav-links{ display:none; }
+    .about-grid, .token-grid{ grid-template-columns:1fr; gap:40px; }
+    .features-grid{ grid-template-columns:1fr 1fr; }
+    .steps{ grid-template-columns:1fr 1fr; }
+    .hero-stats{ gap:36px; }
+  }
+  @media (max-width:520px){
+    .features-grid{ grid-template-columns:1fr; }
+    .steps{ grid-template-columns:1fr; }
+    .cd-box{ min-width:70px; padding:14px; }
+    .cd-box b{ font-size:24px; }
+    .footer-top{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <div class="nav-logo">AXIOM<span>.</span></div>
+    <div class="nav-links">
+      <a href="#about">О проекте</a>
+      <a href="#features">Фишки</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#token">Токен</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="#cta" class="nav-cta">Whitelist</a>
+  </nav>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-scan"></div>
+  <div class="wrap hero-content">
+    <span class="hero-tag">TON NETWORK · NO KYC · NON-CUSTODIAL</span>
+    <h1>AXIOM</h1>
+    <p class="hero-sub">Анонимная биржа нового поколения на блокчейне TON. Никаких форм, паспортов и логов — только твой кошелёк.</p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn btn-primary">Начать</a>
+      <a href="#about" class="btn btn-ghost">Узнать больше</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><b>0.1%</b><span>комиссия за сделку</span></div>
+      <div class="stat"><b>&lt;400мс</b><span>исполнение ордера</span></div>
+      <div class="stat"><b>0</b><span>полей KYC-формы</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="about" id="about">
+  <div class="wrap about-grid">
+    <div class="about-text reveal">
+      <div class="section-head" style="margin-bottom:24px;">
+        <h2>Биржа без посредников</h2>
+      </div>
+      <p><strong>Axiom</strong> — децентрализованная криптобиржа, построенная на блокчейне <strong>TON</strong> (Telegram Open Network). Мы убрали из процесса всё, что превращает трейдинг в бюрократию.</p>
+      <p>Никаких email, номеров телефона и сканов паспорта. Подключаешь TON-кошелёк — и торгуешь. Все сделки проходят через смарт-контракты, средства никогда не покидают твой контроль.</p>
+      <p>Axiom не хранит персональные данные, потому что их у нас попросту нет. Это не маркетинговое обещание — это архитектура протокола.</p>
+    </div>
+    <div class="about-panel reveal">
+      <div class="about-row"><span>Тип биржи</span><span>DEX / Non-custodial</span></div>
+      <div class="about-row"><span>Сеть</span><span>TON</span></div>
+      <div class="about-row"><span>Регистрация</span><span>Не требуется</span></div>
+      <div class="about-row"><span>KYC</span><span>Отсутствует</span></div>
+      <div class="about-row"><span>Хранение средств</span><span>Кошелёк пользователя</span></div>
+      <div class="about-row"><span>Комиссия</span><span>от 0.1%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Главные фишки протокола</h2>
+      <p>Всё, что нужно для анонимного и быстрого трейдинга, без лишних компромиссов.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-4z"/></svg>
+        </div>
+        <h3>Полная анонимность</h3>
+        <p>Регистрация без KYC, без сбора данных и без логов активности. Подключение только через TON-кошелёк.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+        </div>
+        <h3>Блокчейн TON</h3>
+        <p>Высокая скорость транзакций и низкие комиссии благодаря архитектуре Telegram Open Network.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+        </div>
+        <h3>Децентрализация</h3>
+        <p>Смарт-контракты вместо центрального сервера. Ни одной точки отказа, ни одного посредника.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+        </div>
+        <h3>Безопасность</h3>
+        <p>Сквозное шифрование и non-custodial хранение — средства физически невозможно вывести без твоего ключа.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-5 4 4 8-9"/></svg>
+        </div>
+        <h3>Низкие комиссии</h3>
+        <p>От 0.1% за сделку — без скрытых сборов за вывод, депозит или спред маркетмейкера.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <h3>Скорость</h3>
+        <p>Исполнение ордеров за миллисекунды — движок сопоставления работает поверх ончейн-очереди TON.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Как это работает</h2>
+      <p>Четыре шага от подключения кошелька до вывода средств.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h3>Подключи кошелёк</h3>
+        <p>Tonkeeper, MyTonWallet или любой другой TON-совместимый кошелёк — без email и пароля.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h3>Пополни баланс</h3>
+        <p>Переведи TON или поддерживаемый токен напрямую на смарт-контракт биржи.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h3>Торгуй анонимно</h3>
+        <p>Открывай ордера на споте, отслеживай стакан в реальном времени, без верификации личности.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <h3>Выводи без ограничений</h3>
+        <p>Средства выводятся напрямую на твой кошелёк — без лимитов и запросов на подтверждение.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section class="roadmap" id="roadmap">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Roadmap</h2>
+      <p>План разработки и запуска протокола Axiom на 2026 год.</p>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-item done">
+        <div class="tl-dot"></div>
+        <div class="tl-quarter">Q1 2026</div>
+        <h3>Разработка ядра протокола</h3>
+        <p>Проектирование смарт-контрактов, движка сопоставления ордеров и архитектуры хранения на TON.</p>
+      </div>
+      <div class="tl-item done">
+        <div class="tl-dot"></div>
+        <div class="tl-quarter">Q2 2026</div>
+        <h3>Запуск тестнета</h3>
+        <p>Открытое тестирование с ограниченным числом торговых пар и программой поиска багов.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-quarter">Q3 2026</div>
+        <h3>Аудит безопасности</h3>
+        <p>Независимый аудит смарт-контрактов сторонней компанией, публикация отчёта.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-quarter">Q4 2026</div>
+        <h3>Публичный запуск</h3>
+        <p>Открытие мейннета для всех пользователей, листинг токена AXIOM, запуск стейкинга.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOKENOMICS ================= -->
+<section id="token">
+  <div class="wrap token-grid">
+    <div class="reveal">
+      <div class="section-head" style="margin-bottom:28px;">
+        <h2>Токеномика AXIOM</h2>
+        <p>Утилитарный токен протокола: скидки на комиссии, стейкинг и участие в управлении.</p>
+      </div>
+      <ul class="token-list">
+        <li>Стейкинг AXIOM снижает торговую комиссию до 0.02%</li>
+        <li>Часть комиссий протокола выкупает и сжигает токен</li>
+        <li>Держатели токена голосуют за новые торговые пары</li>
+        <li>Общий эмиссионный лимит зафиксирован в смарт-контракте</li>
+      </ul>
+    </div>
+    <div class="token-bars reveal">
+      <div class="token-bar-row"><span class="token-bar-label">Ликвидность DEX</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="30"></div></div><span class="token-bar-pct">30%</span></div>
+      <div class="token-bar-row"><span class="token-bar-label">Стейкинг-резерв</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="25"></div></div><span class="token-bar-pct">25%</span></div>
+      <div class="token-bar-row"><span class="token-bar-label">Команда (лок 24 мес.)</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="18"></div></div><span class="token-bar-pct">18%</span></div>
+      <div class="token-bar-row"><span class="token-bar-label">Экосистема / гранты</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="15"></div></div><span class="token-bar-pct">15%</span></div>
+      <div class="token-bar-row"><span class="token-bar-label">Whitelist-раунд</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="7"></div></div><span class="token-bar-pct">7%</span></div>
+      <div class="token-bar-row"><span class="token-bar-label">Резерв DAO</span><div class="token-bar-track"><div class="token-bar-fill" data-pct="5"></div></div><span class="token-bar-pct">5%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Частые вопросы</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q">Нужно ли проходить KYC?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Нет. Axiom работает как non-custodial протокол — идентификация личности не требуется ни на одном этапе, потому что средства никогда не переходят под контроль биржи.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Какие кошельки поддерживаются?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Tonkeeper, MyTonWallet, Tonhub и любой другой кошелёк, совместимый с протоколом TON Connect.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Как обеспечивается анонимность?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Платформа не запрашивает и не хранит персональные данные, не ведёт IP-логи привязанные к аккаунту и не требует привязки email или телефона — единственный идентификатор пользователя — адрес его кошелька.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Какие торговые пары доступны?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">На старте — TON/USDT, TON/USDC и основные токены экосистемы TON. Список пар будет расширяться по итогам голосования держателей AXIOM.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Где хранятся мои средства?<span class="faq-icon">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Всегда в твоём собственном кошельке. Axiom не выступает кастодианом и не имеет технической возможности заморозить или удержать активы пользователя.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA / WHITELIST ================= -->
+<section class="cta" id="cta">
+  <div class="wrap">
+    <div class="cta-tag reveal">СКОРО ЗАПУСК</div>
+    <h2 class="reveal">Попади в whitelist до публичного запуска</h2>
+
+    <div class="countdown reveal" id="countdown">
+      <div class="cd-box"><b id="cd-days">00</b><span>дней</span></div>
+      <div class="cd-box"><b id="cd-hours">00</b><span>часов</span></div>
+      <div class="cd-box"><b id="cd-mins">00</b><span>минут</span></div>
+      <div class="cd-box"><b id="cd-secs">00</b><span>секунд</span></div>
+    </div>
+
+    <form class="whitelist-form reveal" id="whitelist-form">
+      <input type="text" id="whitelist-input" placeholder="TON-адрес или email" required>
+      <button type="submit" class="btn btn-primary">Записаться</button>
+    </form>
+    <div class="whitelist-msg" id="whitelist-msg"></div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">AXIOM<span>.</span></div>
+        <p class="footer-tagline">Анонимная децентрализованная биржа на блокчейне TON.</p>
+      </div>
+      <div class="footer-social">
+        <a href="#" aria-label="Telegram">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 3.5L2.9 10.9c-1.2.5-1.2 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.2-2.1 4.6 3.4c.8.5 1.4.2 1.6-.7l3-14.1c.3-1.2-.5-1.7-1.6-1.8z"/></svg>
+        </a>
+        <a href="#" aria-label="X (Twitter)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.4 8.5L23 22h-6.8l-5.3-6.9L4.8 22H1.6l7.9-9L1 2h7l4.8 6.3L18.9 2z"/></svg>
+        </a>
+        <a href="#" aria-label="Discord">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.9A18 18 0 0016 3.7l-.4.9a15 15 0 00-7.2 0L8 3.7A18 18 0 004 4.9C1.5 8.9.8 12.8 1.1 16.6a18 18 0 005.4 2.7l.9-1.5a11 11 0 01-1.8-.9l.4-.3a12.6 12.6 0 0010.8 0l.4.3c-.6.4-1.2.6-1.8.9l.9 1.5a18 18 0 005.4-2.7c.4-4.4-.7-8.3-2.7-11.7zM9 14.3c-.8 0-1.5-.8-1.5-1.7S8.1 11 9 11s1.6.8 1.5 1.7c0 .9-.7 1.6-1.5 1.6zm6 0c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.6.8 1.5 1.7c0 .9-.7 1.6-1.5 1.6z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="disclaimer">
+      Криптовалютные активы связаны с высоким риском, включая риск полной потери капитала. Курсы токенов могут значительно колебаться. Axiom не является инвестиционной, юридической или налоговой консультацией. Перед использованием протокола оцените риски самостоятельно и ознакомьтесь с документацией. Ничто на этой странице не является предложением ценных бумаг в какой-либо юрисдикции.
+    </div>
+    <div class="copyright">
+      <span>© 2026 Axiom Protocol. Все права защищены.</span>
+      <span><a href="#faq">FAQ</a> · <a href="#roadmap">Roadmap</a> · <a href="#cta">Whitelist</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  var barEls = document.querySelectorAll('.token-bar-fill');
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        if(entry.target.classList.contains('token-bars')){
+          barEls.forEach(function(bar){
+            bar.style.width = bar.getAttribute('data-pct') + '%';
+          });
+        }
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(function(el){ io.observe(el); });
+
+  /* ---------- FAQ accordion ---------- */
+  var faqItems = document.querySelectorAll('.faq-item');
+  faqItems.forEach(function(item){
+    var q = item.querySelector('.faq-q');
+    var a = item.querySelector('.faq-a');
+    q.addEventListener('click', function(){
+      var isOpen = item.classList.contains('open');
+      faqItems.forEach(function(other){
+        other.classList.remove('open');
+        other.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if(!isOpen){
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
+    });
+  });
+
+  /* ---------- countdown timer ---------- */
+  var launchDate = new Date();
+  launchDate.setDate(launchDate.getDate() + 30);
+  launchDate.setHours(0,0,0,0);
+
+  var elDays = document.getElementById('cd-days');
+  var elHours = document.getElementById('cd-hours');
+  var elMins = document.getElementById('cd-mins');
+  var elSecs = document.getElementById('cd-secs');
+
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function tick(){
+    var now = new Date().getTime();
+    var diff = launchDate.getTime() - now;
+    if(diff <= 0){
+      elDays.textContent = elHours.textContent = elMins.textContent = elSecs.textContent = '00';
+      return;
+    }
+    var d = Math.floor(diff / (1000*60*60*24));
+    var h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    var m = Math.floor((diff % (1000*60*60)) / (1000*60));
+    var s = Math.floor((diff % (1000*60)) / 1000);
+    elDays.textContent = pad(d);
+    elHours.textContent = pad(h);
+    elMins.textContent = pad(m);
+    elSecs.textContent = pad(s);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ---------- whitelist form ---------- */
+  var form = document.getElementById('whitelist-form');
+  var input = document.getElementById('whitelist-input');
+  var msg = document.getElementById('whitelist-msg');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var val = input.value.trim();
+    if(val.length < 4){
+      msg.textContent = '> введите корректный TON-адрес или email';
+      msg.style.color = 'var(--red-bright)';
+      return;
+    }
+    msg.textContent = '> адрес добавлен в очередь whitelist. до встречи на запуске.';
+    msg.style.color = '#3fbf6a';
+    input.value = '';
+  });
+
+  /* ---------- smooth nav offset (accounts for fixed header) ---------- */
+  document.querySelectorAll('a[href^="#"]').forEach(function(link){
+    link.addEventListener('click', function(e){
+      var id = link.getAttribute('href');
+      if(id.length > 1){
+        var target = document.querySelector(id);
+        if(target){
+          e.preventDefault();
+          var top = target.getBoundingClientRect().top + window.pageYOffset - 70;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
